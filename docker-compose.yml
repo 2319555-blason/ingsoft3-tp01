@@ -1,0 +1,105 @@
+# Este archivo describe el SISTEMA COMPLETO: base de datos, backend y
+# frontend, más la red y el volumen que los conectan. Cualquier persona
+# que clone el repo levanta todo con un solo comando:
+#
+#     docker compose up -d
+#
+# Los valores sensibles (usuario y password de la BD) NO están acá:
+# se leen del archivo .env, que no se versiona.
+
+services:
+
+  # ==========================================================
+  # BASE DE DATOS
+  # ==========================================================
+  db:
+    image: postgres:16-alpine
+    container_name: hmt-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      # VOLUMEN NOMBRADO: los datos viven en un espacio administrado por
+      # Docker, fuera del contenedor. Si borro el contenedor, el volumen
+      # sobrevive y los datos siguen ahí. Sin esto, cada vez que se
+      # destruye el contenedor se perderían todos los registros.
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      # Postgres tarda unos segundos en aceptar conexiones después de
+      # arrancar. pg_isready pregunta si YA está listo de verdad.
+      # El $$ escapa el $ para que lo expanda el shell del contenedor.
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    # No publicamos el puerto 5432 al host a propósito: la base solo se
+    # alcanza desde la red interna de Docker. Menos superficie expuesta.
+
+  # ==========================================================
+  # BACKEND (API .NET)
+  # ==========================================================
+  backend:
+    build:
+      context: ./backend
+    image: hmt-backend:v0.1.0
+    container_name: hmt-backend
+    restart: unless-stopped
+    environment:
+      # Esta variable PISA lo que diga appsettings.json.
+      # El doble guión bajo es la forma de escribir la jerarquía
+      # ConnectionStrings:Default como variable de entorno en .NET.
+      #
+      # "Host=db" es el NOMBRE DEL SERVICIO de acá arriba. Docker tiene
+      # un DNS interno que lo resuelve a la IP del contenedor. Nunca una
+      # IP escrita a mano: cambia cada vez que se recrea el contenedor.
+      ConnectionStrings__Default: "Host=db;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}"
+      ASPNETCORE_ENVIRONMENT: Production
+    depends_on:
+      db:
+        # depends_on solo respeta el ORDEN de arranque. Con
+        # condition: service_healthy además ESPERAMOS a que el
+        # healthcheck de la base diga que está lista para recibir
+        # conexiones. Sin esto, el backend arrancaría primero, no
+        # podría crear las tablas y se caería.
+        condition: service_healthy
+    ports:
+      # Publicado solo para poder probar la API directo desde el host
+      # (evidencias, Swagger, curl). El frontend NO lo necesita: le
+      # habla por la red interna de Docker.
+      - "5080:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8080/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      # Le damos margen al arranque: EF Core crea las tablas al iniciar.
+      start_period: 20s
+
+  # ==========================================================
+  # FRONTEND (SPA servida por nginx)
+  # ==========================================================
+  frontend:
+    build:
+      context: ./frontend
+    image: hmt-frontend:v0.1.0
+    container_name: hmt-frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        # nginx resuelve el nombre "backend" al arrancar. Si el backend
+        # todavía no existe, nginx no levanta. Por eso esperamos a que
+        # esté sano antes de arrancar el frontend.
+        condition: service_healthy
+    ports:
+      # LA puerta de entrada del sistema: http://localhost:8080
+      # Del lado izquierdo el puerto de tu máquina, del derecho el
+      # puerto de adentro del contenedor (donde escucha nginx).
+      - "8080:80"
+
+# Volumen nombrado, administrado por Docker. Vive aunque no exista
+# ningún contenedor. Se borra solo si lo pedís explícitamente
+# (docker compose down -v).
+volumes:
+  pgdata:

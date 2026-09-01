@@ -1,0 +1,18 @@
+# Todo lo que esté acá NO se copia al "contexto de build" que se manda
+# al motor de Docker. Sirve para dos cosas: que el build sea más rápido
+# y que no terminen dentro de la imagen archivos que no corresponden.
+
+# Artefactos de compilación local (se recompila adentro del contenedor)
+bin/
+obj/
+
+# Configuración local con credenciales de desarrollo:
+# adentro del contenedor la connection string llega por variable de entorno.
+appsettings.Development.json
+
+# Cosas del editor y del propio Docker
+*.user
+.vs/
+.vscode/
+Dockerfile
+.dockerignore
