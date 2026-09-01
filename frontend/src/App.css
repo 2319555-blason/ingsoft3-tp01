@@ -1,0 +1,337 @@
+:root {
+  --color-bg: #14304a;
+  --color-surface: #1d3f5f;
+  --color-surface-alt: #244a6e;
+  --color-line: rgba(234, 241, 247, 0.16);
+  --color-text: #eaf1f7;
+  --color-text-muted: #9fb8cc;
+  --color-accent: #e3a857;
+  --color-danger: #e2725b;
+  --color-success: #7fb596;
+  --font-display: 'Fraunces', serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+}
+
+.app-shell {
+  min-height: 100%;
+  background: var(--color-bg);
+  background-image:
+    linear-gradient(var(--color-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--color-line) 1px, transparent 1px);
+  background-size: 32px 32px;
+  color: var(--color-text);
+}
+
+/* ---- Header, estilo "cajetín" de plano técnico ---- */
+
+.titleblock {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 20px 32px;
+  border-bottom: 2px solid var(--color-accent);
+  background: rgba(20, 48, 74, 0.9);
+  backdrop-filter: blur(2px);
+}
+
+.titleblock-mark {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 22px;
+  color: var(--color-bg);
+  background: var(--color-accent);
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.titleblock-info h1 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 20px;
+  margin: 0;
+  letter-spacing: 0.2px;
+}
+
+.titleblock-info p {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+.titleblock-nav {
+  margin-left: auto;
+  display: flex;
+  gap: 4px;
+}
+
+.titleblock-nav a {
+  color: var(--color-text-muted);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 8px 14px;
+  border-radius: 4px;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.titleblock-nav a:hover {
+  color: var(--color-text);
+  background: var(--color-surface-alt);
+}
+
+.titleblock-nav a.active {
+  color: var(--color-bg);
+  background: var(--color-accent);
+}
+
+/* ---- Contenido general ---- */
+
+.content {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 40px 32px 80px;
+}
+
+.section-heading {
+  margin-bottom: 28px;
+  border-left: 3px solid var(--color-accent);
+  padding-left: 16px;
+}
+
+.section-heading.with-action {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.section-heading h2 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 26px;
+  margin: 0 0 4px;
+}
+
+.section-heading p {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 14px;
+}
+
+.loading-state, .error-state {
+  color: var(--color-text-muted);
+  font-size: 14px;
+}
+
+.error-state {
+  color: var(--color-danger);
+}
+
+.empty-state {
+  border: 1px dashed var(--color-line);
+  border-radius: 6px;
+  padding: 28px;
+  color: var(--color-text-muted);
+  font-size: 14px;
+}
+
+.empty-state p {
+  margin: 0 0 6px;
+}
+
+.empty-state a {
+  color: var(--color-accent);
+}
+
+/* ---- Panel / sugerencias ---- */
+
+.suggestion-group {
+  margin-bottom: 28px;
+}
+
+.group-label {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  margin: 0 0 12px;
+}
+
+.group-label.status-vencido { color: var(--color-danger); }
+.group-label.status-proximo { color: var(--color-accent); }
+
+.suggestion-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 14px;
+}
+
+.suggestion-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-left: 3px solid var(--color-accent);
+  border-radius: 6px;
+  padding: 16px;
+}
+
+.suggestion-card.status-vencido {
+  border-left-color: var(--color-danger);
+}
+
+.suggestion-category {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-muted);
+}
+
+.suggestion-card h4 {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 600;
+  margin: 6px 0 8px;
+}
+
+.suggestion-days {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.status-vencido .suggestion-days { color: var(--color-danger); }
+.status-proximo .suggestion-days { color: var(--color-accent); }
+
+.suggestion-meta {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+/* ---- Tabla de registros ---- */
+
+.records-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: 6px;
+  overflow: hidden;
+  font-size: 14px;
+}
+
+.records-table th, .records-table td {
+  text-align: left;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--color-line);
+}
+
+.records-table th {
+  color: var(--color-text-muted);
+  font-weight: 500;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.records-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.row-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.row-actions a {
+  color: var(--color-accent);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.link-danger {
+  background: none;
+  border: none;
+  color: var(--color-danger);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 0;
+  font-family: inherit;
+}
+
+/* ---- Formulario ---- */
+
+.record-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 440px;
+}
+
+.record-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+.record-form input,
+.record-form select,
+.record-form textarea {
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: 4px;
+  padding: 10px 12px;
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: 14px;
+}
+
+.record-form input:focus,
+.record-form select:focus,
+.record-form textarea:focus {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+}
+
+.form-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+/* ---- Botones ---- */
+
+.btn {
+  border: 1px solid var(--color-line);
+  background: transparent;
+  color: var(--color-text);
+  padding: 10px 16px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+
+.btn-primary {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: var(--color-bg);
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.btn:hover {
+  border-color: var(--color-accent);
+}
