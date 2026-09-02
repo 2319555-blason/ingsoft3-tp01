@@ -235,9 +235,8 @@ contra seis.
 - Redacción de este documento a partir de las decisiones que tomé yo.
   
 Cómo lo verifiqué: ejecuté yo todos los comandos y revisé el resultado en GitHub
-después de cada paso. Las decisiones que el práctico pide justificar (duración del sprint, límite de trabajo en
-progreso y diagnóstico de la historia mal escrita) las probé,
-el comportamiento en vez de darlo por sentado: pasé el límite de la columna para ver
+después de cada paso.
+El comportamiento en vez de darlo por sentado: pasé el límite de la columna para ver
 que GitHub avisa pero no bloquea, y confirmé el cierre automático mirando que el issue
 quedara enlazado al pull request y la tarjeta se moviera sola a Done.
 
