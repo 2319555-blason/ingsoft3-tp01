@@ -1,4 +1,5 @@
 # Home Maintenance Tracker
+[![CI](https://github.com/2319555-blason/ingsoft3-tp01/actions/workflows/ci.yml/badge.svg)](https://github.com/2319555-blason/ingsoft3-tp01/actions/workflows/ci.yml)
 
 Aplicación para registrar el historial de mantenimiento del hogar y ver qué tareas
 están vencidas o próximas a vencer, calculadas a partir de los registros cargados.
