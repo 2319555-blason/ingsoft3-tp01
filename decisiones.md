@@ -164,3 +164,74 @@ Cómo lo verifiqué:
   responde, que el proxy `/api` funciona, que entrar directo a `/records` no da 404,
   que los datos sobreviven al `down`, y los tamaños de imagen medidos con
   `docker images`.
+
+
+  # Decisiones — TP3: Planificación y trazabilidad
+
+## Duración del sprint: 2 semanas
+
+Elegí sprints de dos semanas y los alineé con el calendario de la materia. La cursada
+avanza a razón de una clase por semana y la primera defensa (P1) cubre los TP1 a TP4,
+así que dos sprints de dos semanas cubren ese bloque completo y cada sprint cierra con
+entregas concretas.
+
+## Límite de trabajo en progreso: 2
+Puse el límite en 2 en la columna *In Progress*. La regla de arranque es **cantidad de
+personas más uno**, y trabajo sola.
+
+El "más uno" no es un número arbitrario: es la válvula para cuando algo queda esperando
+por fuera de mí y necesito avanzar en
+otra cosa sin quedarme trabada. Sin ese margen el límite sería tan estricto que lo
+estaría rompiendo todo el tiempo; con más margen dejaría de limitar.
+
+Comprobé además cómo se comporta la herramienta: al pasar el límite, GitHub pone el
+contador de la columna en rojo pero te deja pasar igual.
+
+## Diagnóstico de la historia mal escrita
+
+La historia del ejercicio era: *"Como desarrollador quiero crear la tabla usuarios para
+guardar los datos"*.
+
+**Por qué está mal escrita:** es una tarea técnica disfrazada de historia. Tiene la
+forma *Como… quiero… para…* pero ninguna de las tres partes funciona. El rol está
+puesto para llenar el molde: nadie "quiere" una tabla, y menos un usuario. La capacidad
+no es un incremento de valor observable por nadie fuera del equipo, es un paso técnico
+interno. Y el beneficio es circular: "para guardar los datos" repite el qué en vez de
+justificar por qué vale la pena hacerla. De INVEST, viola sobre todo la V de *Valiosa*
+(nadie afuera del equipo la pide) y la T de *Testeable*: no se le pueden escribir
+criterios de aceptación verificables, porque "la tabla existe" no demuestra que alguien
+pueda hacer algo nuevo.
+
+**Cómo la reescribiría:** subiría un nivel, hasta el valor que esa tabla habilita, y
+dejaría la tabla como tarea técnica adentro. Por ejemplo: *"Como usuaria quiero que mis
+registros de mantenimiento queden guardados para no perder el historial cuando cierro
+la aplicación"*, con criterios como "un registro creado sigue estando después de
+reiniciar la aplicación" y "el listado los muestra ordenados por fecha". Ahí sí hay un
+rol real, un valor observable y algo que se puede verificar. "Crear la tabla usuarios"
+pasa a ser una de las tareas que la implementan.
+
+## Problemas encontrados y cómo los resolví
+
+**El pull request se mergeó sin cerrar la tarea.** Después de mergear el primer PR que
+agregaba `ci.yml`, el issue de la tarea seguía abierto y su sección *Development* decía
+"No branches or pull requests": el PR nunca había quedado enlazado. El motivo era que
+el `Closes #11` no había llegado al campo de **descripción** del pull request — quedó
+la descripción que GitHub genera sola. La palabra clave solo funciona en la descripción
+del PR o en un mensaje de commit, en el título o en un comentario posterior, no.
+
+No se podía arreglar editando el PR ya mergeado, porque el cierre automático se dispara
+en el momento del merge. Lo resolví con un segundo pull request.
+
+**El proyecto hay que crearlo desde la web.** Creado por comando, el tablero nace vacío,
+porque `gh project create` no elige ningún repositorio y no queda configurado el
+workflow de auto-add. Creándolo desde la web, con la casilla *Import items from
+repository* tildada, los issues entran solos. Se nota en el número de workflows: siete
+contra seis.
+
+
+## Declaración de uso de IA
+- Adaptación de los comandos `gh` de la guía a mi aplicación, y redacción del cuerpo de
+  las dos tareas y del bug (la guía los describe en prosa pero no da el comando armado).
+- Redacción de este documento a partir de las decisiones que tomé yo.
+
+
