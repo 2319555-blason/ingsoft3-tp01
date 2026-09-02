@@ -163,6 +163,8 @@ docker run -d --name pg-dev -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=app -p 
 cd backend && dotnet restore && dotnet run
 
 
+
+
 # Frontend
 cd frontend && npm install && npm run dev
 ```
