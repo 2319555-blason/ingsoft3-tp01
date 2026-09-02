@@ -22,7 +22,8 @@ Acá se crea un tag que marca un commit, y se define el release que describe qu�
 
 ## 1. El sistema completo levantando con un solo comando
 
-<!-- PEGAR ACÁ la captura de: docker compose up -d  +  docker compose ps -->
+<img width="1487" height="371" alt="image" src="https://github.com/user-attachments/assets/0b8e5609-f380-49b3-a6ee-c6ba54d9f2ba" />
+
 
 Los tres servicios quedan en `running`, y `db` y `backend` además en `healthy`, que es
 lo que confirma que sus healthchecks están pasando. El backend tarda unos segundos más
@@ -35,7 +36,8 @@ Docker. Es una decisión deliberada para no exponerla.
 
 ## 2. La aplicación funcionando end-to-end
 
-<!-- PEGAR ACÁ la captura del navegador en http://localhost:8080/records con los registros cargados -->
+<img width="1600" height="787" alt="image" src="https://github.com/user-attachments/assets/e2daec0e-289c-44e5-b774-a2b588e2f6d2" />
+
 
 Esta pantalla recorre el sistema entero: el navegador pide la página a nginx, la SPA
 pide `/api/records`, nginx lo proxea al backend por su nombre de red, el backend
@@ -44,7 +46,8 @@ red entre ellos fallara, esta tabla no se llenaría.
 
 ## 3. Persistencia (1/3): `down` destruye los contenedores, el volumen queda
 
-<!-- PEGAR ACÁ la captura de: docker compose down + docker ps + docker volume ls --filter name=ingsoft3-tp01 -->
+<img width="1437" height="682" alt="image" src="https://github.com/user-attachments/assets/86fbfca0-71cc-4c5b-ad10-5b2347fa0eca" />
+
 
 `docker compose down` elimina los tres contenedores y la red: no quedan pausados, dejan
 de existir, y `docker ps` lo confirma vacío. Sin embargo el volumen
@@ -52,7 +55,8 @@ de existir, y `docker ps` lo confirma vacío. Sin embargo el volumen
 
 ## 4. Persistencia (2/3): al volver a levantar, los datos siguen
 
-<!-- PEGAR ACÁ la captura del navegador con los mismos registros después de docker compose up -d -->
+<img width="1600" height="803" alt="image" src="https://github.com/user-attachments/assets/d142793e-740b-4e68-854b-ad6555a48cb4" />
+
 
 El contenedor de PostgreSQL es **uno nuevo**, creado desde cero. Los registros siguen
 ahí porque al montar el volumen se encuentra los datos que dejó el contenedor anterior.
@@ -60,9 +64,11 @@ Esto es lo que demuestra la persistencia.
 
 ## 5. Persistencia (3/3): `down -v` sí borra los datos
 
-<!-- PEGAR ACÁ la captura de: docker compose down -v + docker volume ls --filter name=ingsoft3-tp01 (vacío) -->
+<img width="947" height="258" alt="image" src="https://github.com/user-attachments/assets/945adff7-3b53-4153-baaf-a1a9f8694e0d" />
 
-<!-- PEGAR ACÁ la captura del navegador, después de docker compose up -d, con la tabla de registros VACÍA -->
+
+<img width="1600" height="810" alt="image" src="https://github.com/user-attachments/assets/57736afc-16b0-4e38-a13a-7da0594787f1" />
+
 
 Acá está la contracara del punto 3. La opción `-v` (de *volumes*) le dice a Docker que
 además de los contenedores elimine los volúmenes declarados en el compose. El
@@ -79,7 +85,8 @@ entorno real.
 
 ## 6. Comparación de tamaños: imagen final vs imagen de compilación
 
-<!-- PEGAR ACÁ la captura de: docker images | Select-String "hmt-|dotnet/sdk|node" -->
+<img width="1273" height="201" alt="image" src="https://github.com/user-attachments/assets/a85c6858-380d-41a2-8320-0f5bbe67e011" />
+
 
 | Imagen final | Tamaño | Imagen usada para compilarla | Tamaño | Reducción |
 |---|---|---|---|---|
@@ -91,7 +98,8 @@ finales no contienen el código fuente ni las herramientas de compilación.
 
 ## 7. Imágenes publicadas y accesibles sin autenticación
 
-<!-- PEGAR ACÁ la captura de: docker logout ghcr.io + los dos docker pull -->
+<img width="1041" height="241" alt="image" src="https://github.com/user-attachments/assets/7dcc21e0-2a78-4b20-9045-4ffefb93fbf4" />
+
 
 Después de cerrar sesión en el registry, ambas imágenes se resuelven y descargan igual.
 Si fueran privadas, el pull cortaría con `denied` antes de mostrar ningún digest. Eso
@@ -100,13 +108,16 @@ prueba que están publicadas como públicas.
 Imágenes:
 
 - `ghcr.io/2319555-blason/hmt-backend:v0.1.0`
-- `ghcr.io/2319555-blason/hmt-frontend:v0.1.0`
+  <img width="1102" height="430" alt="image" src="https://github.com/user-attachments/assets/dcdec3b2-6780-450e-b0b7-537c6506cea9" />
 
-<!-- OPCIONAL: PEGAR ACÁ la captura de la pestaña Packages de GitHub mostrando los dos paquetes como Public -->
+- `ghcr.io/2319555-blason/hmt-frontend:v0.1.0`
+  <img width="1425" height="523" alt="image" src="https://github.com/user-attachments/assets/36dc47fd-f4f7-4608-aaac-8e82ee25e20a" />
+
 
 ## 8. El sistema levantado desde las imágenes del registry
 
-<!-- PEGAR ACÁ la captura de: docker compose -f docker-compose.registry.yml up -d + ps -->
+<img width="1478" height="326" alt="image" src="https://github.com/user-attachments/assets/8628a3ca-b09e-475a-a838-b1cfee05cb79" />
+
 
 Acá el sistema arranca sin compilar nada: `docker-compose.registry.yml` no tiene
 ninguna clave `build`, solo descarga las imágenes publicadas. En la columna `IMAGE` se
