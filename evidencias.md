@@ -29,11 +29,6 @@ Los tres servicios quedan en `running`, y `db` y `backend` además en `healthy`,
 lo que confirma que sus healthchecks están pasando. El backend tarda unos segundos más
 que la base porque espera a que esta esté lista antes de arrancar.
 
-Un detalle importante de esta salida: `hmt-db` muestra `5432/tcp` **sin** un
-`0.0.0.0:` adelante, a diferencia de los otros dos. Eso significa que la base no
-publica ningún puerto al host: solo se la puede alcanzar desde la red interna de
-Docker. Es una decisión deliberada para no exponerla.
-
 ## 2. La aplicación funcionando end-to-end
 
 <img width="1600" height="787" alt="image" src="https://github.com/user-attachments/assets/e2daec0e-289c-44e5-b774-a2b588e2f6d2" />
@@ -70,7 +65,7 @@ Esto es lo que demuestra la persistencia.
 <img width="1600" height="810" alt="image" src="https://github.com/user-attachments/assets/57736afc-16b0-4e38-a13a-7da0594787f1" />
 
 
-Acá está la contracara del punto 3. La opción `-v` (de *volumes*) le dice a Docker que
+La opción `-v` le dice a Docker que
 además de los contenedores elimine los volúmenes declarados en el compose. El
 `docker volume ls` filtrado ya no devuelve nada: `ingsoft3-tp01_pgdata` dejó de existir.
 
