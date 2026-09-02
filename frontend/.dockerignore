@@ -1,0 +1,18 @@
+# Dependencias instaladas localmente: se reinstalan adentro del
+# contenedor con npm ci. Copiarlas sería lento y podría traer binarios
+# compilados para Windows que no sirven en Linux.
+node_modules/
+
+# Resultado de un build local: el build bueno se hace adentro.
+dist/
+
+# Historial de git, config del editor y del propio Docker
+.git
+.vscode/
+Dockerfile
+.dockerignore
+
+# Logs y secretos
+npm-debug.log*
+.env
+.env.local
