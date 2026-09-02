@@ -233,5 +233,11 @@ contra seis.
 - Adaptación de los comandos `gh` de la guía a mi aplicación, y redacción del cuerpo de
   las dos tareas y del bug (la guía los describe en prosa pero no da el comando armado).
 - Redacción de este documento a partir de las decisiones que tomé yo.
-
+  
+Cómo lo verifiqué: ejecuté yo todos los comandos y revisé el resultado en GitHub
+después de cada paso. Las decisiones que el práctico pide justificar (duración del sprint, límite de trabajo en
+progreso y diagnóstico de la historia mal escrita) las probé,
+el comportamiento en vez de darlo por sentado: pasé el límite de la columna para ver
+que GitHub avisa pero no bloquea, y confirmé el cierre automático mirando que el issue
+quedara enlazado al pull request y la tarjeta se moviera sola a Done.
 
