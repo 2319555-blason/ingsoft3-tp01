@@ -275,6 +275,23 @@ primera corrida. Si fallara sin cache no tendría un cache, tendría una depende
 escondida, y eso sería un bug.
 
 
+## Por qué el pipeline construye con el Dockerfile
+
+El workflow no tiene una sola línea de .NET ni de Node. No sabe cómo se compila la
+aplicación: eso lo sabe el Dockerfile que escribí en el TP2.
+
+Si el pipeline compilara por su cuenta con `dotnet build` y `npm run build` tendría dos
+definiciones de build: la del pipeline y la del Dockerfile. Tarde o temprano divergen
+—se agrega un flag en una y se olvida en la otra— y el resultado es peor que no tener
+CI, porque estaría verificando una compilación distinta de la que después se despliega.
+Un pipeline en verde dejaría de significar que lo que va a producción funciona.
+
+Construyendo con el Dockerfile, lo que el pipeline verifica es exactamente el mismo
+artefacto que después se levanta con `docker compose`. Y como efecto secundario, este
+workflow le serviría a cualquier compañero con otro stack: lo único que cambiaría es su
+Dockerfile.
+
+
 ## Problemas encontrados y cómo los resolví
 
 **La primera corrida no mostraba ningún `CACHED`.** Busqué la palabra en el log y el
