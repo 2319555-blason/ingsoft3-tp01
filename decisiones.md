@@ -240,3 +240,67 @@ El comportamiento en vez de darlo por sentado: pasé el límite de la columna pa
 que GitHub avisa pero no bloquea, y confirmé el cierre automático mirando que el issue
 quedara enlazado al pull request y la tarjeta se moviera sola a Done.
 
+
+# Decisiones — TP4: CI, Pipelines as Code
+
+## Estructura del pipeline
+
+El workflow tiene **dos jobs**: `build-backend` y `build-frontend`. Uno por cada
+Dockerfile que tiene la aplicación desde el TP2.
+
+**Por qué separados y no uno solo:** son dos artefactos independientes. El backend no
+necesita nada de lo que produce el frontend ni al revés, así que no hay ninguna razón
+para encadenarlos. Al estar en jobs distintos, GitHub los corre **en paralelo**, cada
+uno en su propia máquina virtual: el tiempo total es el del job más lento, no la suma
+de los dos.
+
+Como efecto secundario, cuando algo falla el diagnóstico es inmediato: se ve cuál de
+los dos se puso en rojo sin tener que leer el log. En la demostración del gate, el
+backend falló y el frontend siguió en verde.
+
+## Qué cachea el pipeline
+
+Lo que se cachea son **las capas de las imágenes Docker**, no dependencias sueltas. Se
+guardan en el cache de GitHub Actions, que no es el Docker de mi máquina ni
+el del runner: ese nace vacío en cada corrida y se destruye al terminar.
+
+**Qué se reutilizó, medido en la segunda corrida del backend:** 7 capas con `CACHED`,
+entre ellas el `COPY` del `.csproj`, el `dotnet restore`, el `COPY` del código y el
+`dotnet publish`. El step de build pasó de 31 a 4 segundos y el job entero de 40 a 19.
+
+**Qué pasa si el cache desaparece:** nada, salvo que las corridas tardan más. El cache
+es una **optimización**, no una dependencia: la plataforma lo desaloja cuando quiere y
+tiene límite de tamaño. Mi pipeline construye igual sin él, desde cero, como hizo en la
+primera corrida. Si fallara sin cache no tendría un cache, tendría una dependencia
+escondida, y eso sería un bug.
+
+
+## Problemas encontrados y cómo los resolví
+
+**La primera corrida no mostraba ningún `CACHED`.** Busqué la palabra en el log y el
+contador daba 0, y pensé que el cache estaba mal configurado. No lo estaba: esa primera
+corrida es la que **guarda** las capas, no la que las reutiliza — en el log se ve
+`importing cache manifest` sin encontrar nada, porque no había nada guardado todavía.
+Lo resolví disparando una segunda corrida sobre el mismo PR con un commit adicional, y
+ahí aparecieron las 7 capas reutilizadas.
+
+
+**Busqué el código roto en `main` y no estaba.** Cuando fui a arreglar el `using` que
+no existe, abrí `backend/Program.cs` y la línea no aparecía. No era un error: estaba
+mirando el archivo en `main`, y la rotura vivía solo en la rama del pull request.
+Justamente por eso el gate sirve — el código que no compila **nunca llegó a `main`**.
+Tuve que cambiar el selector de rama para editarlo.
+
+
+## Declaración de uso de IA
+- Redacción del `ci.yml` a partir del ejemplo de la guía, adaptado a mis dos Dockerfiles.
+- Redacción de este documento a partir de lo que hice y decidí.
+
+
+Cómo lo verifiqué: ejecuté yo cada paso y comprobé el resultado en la interfaz de
+GitHub antes de seguir — que los dos jobs corrieran en paralelo y en verde, que el log
+mostrara las capas con `CACHED` y cuáles, que los dos checks aparecieran como `Required`
+en el pull request, que el merge quedara efectivamente bloqueado con el build en rojo, y
+que el badge llevara al historial de corridas al hacerle clic. La secuencia completa de
+rojo a verde está registrada en el PR #20, con sus dos commits y sus corridas.
+
