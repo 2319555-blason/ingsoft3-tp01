@@ -1,3 +1,8 @@
+  <ItemGroup>
+    <Compile Remove="HomeMaintenanceApi.Tests/**" />
+    <Content Remove="HomeMaintenanceApi.Tests/**" />
+  </ItemGroup>
+
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
