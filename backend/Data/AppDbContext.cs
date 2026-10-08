@@ -1,8 +1,11 @@
+using System.Diagnostics.CodeAnalysis;
 using HomeMaintenanceApi.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace HomeMaintenanceApi.Data;
 
+// Excluido de la cobertura: configuración de Entity Framework, sin reglas de negocio.
+[ExcludeFromCodeCoverage]
 public class AppDbContext : DbContext
 {
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }

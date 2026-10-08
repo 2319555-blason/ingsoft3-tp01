@@ -1,7 +1,10 @@
+using System.Diagnostics.CodeAnalysis;
 namespace HomeMaintenanceApi.Models;
 
 // Un registro de mantenimiento del hogar ya realizado.
 // Ej: Category="Plomería", Title="Revisión de cañerías", DateCompleted=2025-03-10, RecommendedIntervalMonths=12
+// Excluido de la cobertura: clase de datos, sólo propiedades.
+[ExcludeFromCodeCoverage]
 public class MaintenanceRecord
 {
     public int Id { get; set; }

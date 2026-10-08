@@ -1,6 +1,9 @@
+using System.Diagnostics.CodeAnalysis;
 namespace HomeMaintenanceApi.Dtos;
 
 // Lo que el cliente manda para crear o editar un registro
+// Excluido de la cobertura: DTO, sólo datos.
+[ExcludeFromCodeCoverage]
 public record RecordUpsertDto(
     string Category,
     string Title,
@@ -10,6 +13,8 @@ public record RecordUpsertDto(
 );
 
 // Lo que devuelve /api/suggestions: una tarea pendiente o próxima a vencer
+// Excluido de la cobertura: DTO, sólo datos.
+[ExcludeFromCodeCoverage]
 public record MaintenanceSuggestionDto(
     string Category,
     string Title,

@@ -6,6 +6,9 @@ node_modules/
 # Resultado de un build local: el build bueno se hace adentro.
 dist/
 
+# Reporte de cobertura generado en tu máquina (TP5)
+coverage/
+
 # Historial de git, config del editor y del propio Docker
 .git
 .vscode/

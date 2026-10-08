@@ -3,8 +3,15 @@
 # y que no terminen dentro de la imagen archivos que no corresponden.
 
 # Artefactos de compilación local (se recompila adentro del contenedor)
-bin/
-obj/
+# Con **/ porque ahora hay DOS proyectos (la app y los tests): "bin/" sólo
+# ignoraba la carpeta de la raíz, y el obj/ de los tests (con rutas de
+# Windows adentro) se colaba en la imagen y rompía el restore.
+**/bin/
+**/obj/
+
+# Resultados y reportes de cobertura generados en tu máquina (TP5)
+**/TestResults/
+coveragereport/
 
 # Configuración local con credenciales de desarrollo:
 # adentro del contenedor la connection string llega por variable de entorno.
