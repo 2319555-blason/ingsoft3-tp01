@@ -14,3 +14,8 @@ build/
 Thumbs.db
 .vscode/
 .idea/
+
+# reportes de cobertura (se generan en cada corrida; en el pipeline se suben como artefacto)
+TestResults/
+coveragereport/
+coverage/

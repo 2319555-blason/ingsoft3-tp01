@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using HomeMaintenanceApi.Data;
 using HomeMaintenanceApi.Dtos;
 using HomeMaintenanceApi.Models;
@@ -107,3 +108,7 @@ app.MapGet("/api/suggestions", async (SuggestionsProvider provider) =>
     Results.Ok(await provider.GetCurrentAsync()));
 
 app.Run();
+
+// Excluido de la cobertura: es el arranque (cablea servicios y rutas), no tiene reglas propias.
+[ExcludeFromCodeCoverage]
+public partial class Program { }

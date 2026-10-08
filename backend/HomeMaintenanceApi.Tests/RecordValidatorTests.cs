@@ -62,6 +62,27 @@ public class RecordValidatorTests
         Assert.Contains("título", error);
     }
 
+
+    // ── Caso de error: categoría sin contenido ───────────────────────────────
+    // Agregado después de medir la cobertura: el reporte mostró que la rama "categoría vacía"
+    // del validador (RecordValidator.cs, líneas 18-19) no la recorría ningún test.
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void CategoriaSinContenido_EsRechazada(string categoria)
+    {
+        // Arrange
+        var dto = RegistroValido() with { Category = categoria };
+
+        // Act
+        var errores = RecordValidator.Validate(dto, Hoy);
+
+        // Assert
+        var error = Assert.Single(errores);
+        Assert.Contains("categoría", error);
+    }
+
+
     // ── Caso de error: fecha futura (y su borde: hoy sí vale) ───────────────
     [Fact]
     public void FechaDeMañana_EsRechazada_PeroLaDeHoyNo()
