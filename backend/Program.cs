@@ -15,6 +15,12 @@ var connectionString = builder.Configuration.GetConnectionString("Default")
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connectionString));
 
+// Las dependencias de SuggestionsProvider: en la app, la base real y el reloj del sistema.
+// (En los tests se reemplazan por dobles.)
+builder.Services.AddScoped<IMaintenanceRecordRepository, EfMaintenanceRecordRepository>();
+builder.Services.AddSingleton(TimeProvider.System);
+builder.Services.AddScoped<SuggestionsProvider>();
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -49,6 +55,9 @@ app.MapGet("/api/records/{id:int}", async (int id, AppDbContext db) =>
 
 app.MapPost("/api/records", async (RecordUpsertDto dto, AppDbContext db) =>
 {
+    var errores = RecordValidator.Validate(dto, DateOnly.FromDateTime(DateTime.UtcNow));
+    if (errores.Count > 0) return Results.BadRequest(new { errores });
+
     var record = new MaintenanceRecord
     {
         Category = dto.Category,
@@ -66,6 +75,9 @@ app.MapPost("/api/records", async (RecordUpsertDto dto, AppDbContext db) =>
 
 app.MapPut("/api/records/{id:int}", async (int id, RecordUpsertDto dto, AppDbContext db) =>
 {
+    var errores = RecordValidator.Validate(dto, DateOnly.FromDateTime(DateTime.UtcNow));
+    if (errores.Count > 0) return Results.BadRequest(new { errores });
+
     var record = await db.MaintenanceRecords.FindAsync(id);
     if (record is null) return Results.NotFound();
 
@@ -91,11 +103,7 @@ app.MapDelete("/api/records/{id:int}", async (int id, AppDbContext db) =>
 
 // ---- Sugerencias ----
 
-app.MapGet("/api/suggestions", async (AppDbContext db) =>
-{
-    var records = await db.MaintenanceRecords.ToListAsync();
-    var today = DateOnly.FromDateTime(DateTime.UtcNow);
-    return Results.Ok(SuggestionService.BuildSuggestions(records, today));
-});
+app.MapGet("/api/suggestions", async (SuggestionsProvider provider) =>
+    Results.Ok(await provider.GetCurrentAsync()));
 
 app.Run();
