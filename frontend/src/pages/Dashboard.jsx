@@ -1,14 +1,15 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../api/client.js'
+import { formatDaysLabel, loadSuggestions } from '../logic/suggestions.js'
 
 export default function Dashboard() {
-  const [suggestions, setSuggestions] = useState(null)
+  const [groups, setGroups] = useState(null)
   const [error, setError] = useState(null)
 
   useEffect(() => {
-    api.getSuggestions()
-      .then(setSuggestions)
+    loadSuggestions(api)
+      .then(setGroups)
       .catch((err) => setError(err.message))
   }, [])
 
@@ -16,12 +17,11 @@ export default function Dashboard() {
     return <p className="error-state">No se pudo cargar el panel: {error}</p>
   }
 
-  if (suggestions === null) {
+  if (groups === null) {
     return <p className="loading-state">Cargando panel...</p>
   }
 
-  const overdue = suggestions.filter((s) => s.status === 'Vencido')
-  const upcoming = suggestions.filter((s) => s.status === 'Próximo')
+  const { overdue, upcoming } = groups
 
   return (
     <section>
@@ -30,7 +30,7 @@ export default function Dashboard() {
         <p>Esto se recalcula cada vez que abrís la app, según tus registros.</p>
       </div>
 
-      {suggestions.length === 0 && (
+      {overdue.length === 0 && upcoming.length === 0 && (
         <div className="empty-state">
           <p>No hay tareas vencidas ni próximas por ahora.</p>
           <p>Si es la primera vez que usás la app, <Link to="/records/new">cargá un registro</Link> para empezar el historial.</p>
@@ -64,9 +64,7 @@ export default function Dashboard() {
 
 function SuggestionCard({ suggestion }) {
   const statusClass = suggestion.status === 'Vencido' ? 'status-vencido' : 'status-proximo'
-  const daysLabel = suggestion.daysUntilDue < 0
-    ? `Vencido hace ${Math.abs(suggestion.daysUntilDue)} días`
-    : `Vence en ${suggestion.daysUntilDue} días`
+  const daysLabel = formatDaysLabel(suggestion.daysUntilDue)
 
   return (
     <article className={`suggestion-card ${statusClass}`}>
