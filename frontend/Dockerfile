@@ -24,7 +24,17 @@ COPY . .
 RUN npm run build
 
 # ============================================================
-# ETAPA 2 — "runtime": un servidor web sirviendo archivos estáticos.
+# ETAPA 2 — "test" (TP5): corre vitest con cobertura y umbral.
+# Arranca DESDE "build": ya tiene Node y TODAS las dependencias
+# (npm ci sin --omit=dev, así que vitest está). Si la cobertura
+# queda bajo el umbral de vite.config.js, vitest sale con error.
+# La imagen final (nginx) no se lleva nada de esto.
+# ============================================================
+FROM build AS test
+ENTRYPOINT ["npm", "run", "test:ci"]
+
+# ============================================================
+# ETAPA 3 — "runtime": un servidor web sirviendo archivos estáticos.
 # Acá NO hay Node ni node_modules. Solo nginx y la carpeta dist.
 # ============================================================
 FROM nginx:1.27-alpine AS runtime

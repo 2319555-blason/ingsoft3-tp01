@@ -12,7 +12,11 @@ WORKDIR /src
 # a descargar los paquetes NuGet. Si copiáramos todo junto, cualquier
 # cambio de una línea de C# invalidaría el restore y bajaría todo de nuevo.
 COPY HomeMaintenanceApi.csproj ./
+# TP5: también el .csproj de los tests, para que su restore quede cacheado en esta capa.
+# (Sin esto la etapa de tests bajaría los paquetes en CADA corrida.)
+COPY HomeMaintenanceApi.Tests/HomeMaintenanceApi.Tests.csproj HomeMaintenanceApi.Tests/
 RUN dotnet restore HomeMaintenanceApi.csproj
+RUN dotnet restore HomeMaintenanceApi.Tests/HomeMaintenanceApi.Tests.csproj
 
 # Recién ahora el resto del código fuente (esto cambia en cada commit).
 COPY . .
@@ -23,7 +27,27 @@ COPY . .
 RUN dotnet publish HomeMaintenanceApi.csproj -c Release -o /app/publish --no-restore
 
 # ============================================================
-# ETAPA 2 — "runtime": la imagen final que se va a distribuir.
+# ETAPA 2 — "test" (TP5): corre los tests y mide la cobertura.
+# Arranca DESDE "build": hereda el SDK, el código y los paquetes ya
+# restaurados, así que testea el mismo código que se compiló.
+# No va WORKDIR: hereda /src de la etapa build.
+# ENTRYPOINT (y no RUN): los tests corren cuando el pipeline hace
+# "docker run", no al construir; así los resultados salen por el volumen.
+#   /p:CollectCoverage=true  → coverlet.msbuild mide la cobertura...
+#   /p:Threshold=90          → ...y FALLA si queda por debajo de 90%
+#   /p:ThresholdType=line%2cbranch → sobre líneas Y ramas (%2c = coma)
+# Qué entra en la cuenta: las clases marcadas [ExcludeFromCodeCoverage]
+# (Program, DTOs, modelo, DbContext, repositorio EF) quedan afuera.
+# La imagen final NO se lleva nada de esta etapa.
+# ============================================================
+FROM build AS test
+ENTRYPOINT ["dotnet", "test", "HomeMaintenanceApi.Tests/HomeMaintenanceApi.Tests.csproj", \
+            "/p:CollectCoverage=true", "/p:Threshold=90", "/p:ThresholdType=line%2cbranch", \
+            "--logger", "trx;LogFileName=tests.trx", \
+            "--results-directory", "/out"]
+
+# ============================================================
+# ETAPA 3 — "runtime": la imagen final que se va a distribuir.
 # Solo el runtime de ASP.NET (mucho más chica que el SDK).
 # Todo lo de la etapa anterior se descarta menos lo que copiemos.
 # ============================================================

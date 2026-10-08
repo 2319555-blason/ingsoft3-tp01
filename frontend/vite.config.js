@@ -19,7 +19,10 @@ export default defineConfig({
       include: ['src/logic/**/*.js'],
       exclude: ['src/**/*.test.js'],
       // text: tabla en la terminal · html: reporte navegable · json-summary: para el resumen del pipeline
-      reporter: ['text', 'html', 'json-summary']
+      reporter: ['text', 'html', 'json-summary'],
+      // EL UMBRAL: si la cobertura de líneas o de ramas queda por debajo de 90%,
+      // vitest sale con error -> el docker run falla -> el job del pipeline queda rojo -> no se puede mergear
+      thresholds: { lines: 90, branches: 90 }
     }
   },
   server: {
