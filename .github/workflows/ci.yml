@@ -24,6 +24,10 @@ jobs:
 
       - name: Preparar el constructor que sabe cachear
         uses: docker/setup-buildx-action@v4
+        with:
+          # La imagen de BuildKit se baja de un espejo en ECR Public y no de Docker Hub:
+          # desde los runners de GitHub, Docker Hub daba timeout y el job moría acá.
+          driver-opts: image=public.ecr.aws/vend/moby/buildkit:buildx-stable-1
 
       # ---------------- TP5: tests + cobertura + umbral del backend ----------------
       - name: Construir la etapa de tests del backend
@@ -99,6 +103,10 @@ jobs:
 
       - name: Preparar el constructor que sabe cachear
         uses: docker/setup-buildx-action@v4
+        with:
+          # La imagen de BuildKit se baja de un espejo en ECR Public y no de Docker Hub:
+          # desde los runners de GitHub, Docker Hub daba timeout y el job moría acá.
+          driver-opts: image=public.ecr.aws/vend/moby/buildkit:buildx-stable-1
 
       # ---------------- TP5: tests + cobertura + umbral del frontend ----------------
       - name: Construir la etapa de tests del frontend
