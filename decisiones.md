@@ -321,3 +321,128 @@ en el pull request, que el merge quedara efectivamente bloqueado con el build en
 que el badge llevara al historial de corridas al hacerle clic. La secuencia completa de
 rojo a verde está registrada en el PR #20, con sus dos commits y sus corridas.
 
+
+# Decisiones — TP5: Calidad automatizada (tests, coverage y umbral)
+
+## Qué lógica testeé y por qué
+
+Lo más importante de mi app es **el panel de sugerencias**: si calcula mal, el usuario no
+se entera de que tiene una tarea vencida. Por eso testeé `SuggestionService`, que es el que
+decide si una tarea está "Vencida", "Próxima" o al día.
+
+Reglas que prueban los tests:
+
+- Si la fecha ya pasó, la tarea está **Vencida**.
+- Si faltan 30 días o menos, está **Próxima**. Si faltan más, no se muestra.
+- Si la misma tarea se hizo varias veces, cuenta **la más reciente**.
+- El panel sale ordenado: primero lo más urgente.
+
+Para los bordes (los valores justo en el límite) usé un test **parametrizado** con -1, 0 y 30
+días, y otro con 31. Si alguien cambia un `<` por un `<=`, alguno de esos se pone en rojo.
+
+**Regla nueva que agregué:** antes la API aceptaba cualquier registro (por ejemplo, un
+intervalo de 0 meses, que deja la tarea vencida para siempre). Agregué `RecordValidator`, que
+rechaza: categoría o título vacíos, intervalo fuera de 1 a 120 meses, y fecha futura. Sus
+tests son los **casos de error** de la suite.
+
+En total: **13 métodos de test en el backend** y **5 en el frontend**.
+
+## El test con mock (y el cambio que tuve que hacer)
+
+La lógica del panel estaba metida adentro de `Program.cs`, leyendo directo de la base de
+datos y de la fecha del sistema. Así no se podía testear sin una base real.
+
+La saqué a una clase nueva, `SuggestionsProvider`, que recibe **desde afuera** de dónde
+leer los registros (`IMaintenanceRecordRepository`) y qué día es hoy (`TimeProvider`).
+
+En el test, con **Moq**, le paso un repositorio falso que devuelve registros fijos y un reloj
+falso con una fecha fija. Después verifico dos cosas: que el panel salió bien, y que el
+repositorio se consultó **una vez**.
+
+- Lo que **devuelve datos fijos** es un **stub**.
+- Cuando además **verifico que lo llamaron**, es un **mock**.
+
+En el frontend hice lo mismo: saqué la lógica del componente a `src/logic/suggestions.js` y
+en el test reemplacé la API real por una falsa con `vi.fn()`.
+
+## Mi umbral de coverage
+
+**90%, de líneas y de ramas, en backend y frontend.**
+
+- Hoy mi cobertura es **100% de líneas y 100% de ramas** en los dos lados.
+- Elegí 90 para tener margen: no se traba por una línea difícil de testear, pero si entra
+  código nuevo sin tests, baja de 90 y frena.
+- No puse 100 porque cualquier línea imposible de testear bloquearía todo.
+- Lo puse sobre **las dos métricas** porque ninguna sola alcanza: en el PR #29 la de ramas dio
+  92,85% con un archivo entero sin tests, y lo frenó la de líneas.
+
+Corrida con el resumen de cobertura y los reportes descargables:
+https://github.com/2319555-blason/ingsoft3-tp01/actions/runs/37800862595
+
+## Qué dejé afuera de la cuenta
+
+Dejé afuera lo que **no tiene reglas que testear**:
+
+- **Backend:** `Program.cs` (solo arranca la app), las clases que solo guardan datos
+  (`MaintenanceRecord` y los DTOs), `AppDbContext` (configuración de la base) y
+  `EfMaintenanceRecordRepository` (una línea que lee de la base; probarlo necesita una base real).
+- **Frontend:** solo cuento `src/logic/`. Quedan afuera las pantallas (`pages/`, `App.jsx`),
+  el arranque (`main.jsx`), `constants.js` (datos) y `api/client.js` (en los tests lo reemplazo
+  por uno falso).
+
+Primero saqué la lógica de `Program.cs` y recién después lo excluí. Si no, estaría
+escondiendo código sin testear.
+
+## Por qué coverage alto no garantiza calidad
+
+La cobertura dice qué líneas **se ejecutaron**, no si el test **comprobó** algo. Un test que
+llame a una función sin ningún `Assert` sube la cobertura igual.
+
+Mi ejemplo: el frontend da 100%, pero ningún test prueba qué pasa si llega una sugerencia con
+un estado raro (ni "Vencido" ni "Próximo"). La cobertura no lo ve.
+
+## El camino sin cubrir
+
+La primera medición del backend dio **97,8% de líneas y 93,7% de ramas**.
+
+- **Qué línea:** `RecordValidator.cs`, líneas 18-19: el `if` que rechaza la categoría vacía.
+  Ningún test usaba una categoría vacía, así que ese camino nunca se ejecutó.
+- **Qué entrada lo recorre:** un registro con `Category = ""`.
+- **Qué decidí:** agregar el test `CategoriaSinContenido_EsRechazada`. Quedó en 100%.
+
+## Mi Pull Request bloqueado
+
+**PR #28 (rojo → tests → verde → merge):** https://github.com/2319555-blason/ingsoft3-tp01/pull/28
+
+Agregué `PriorityService` **sin tests**. Compilaba y los 19 tests pasaban, pero el check
+`build-backend` se puso en rojo: la cobertura bajó a **83,92% de líneas y 72,72% de ramas**,
+debajo de 90. Agregué `PriorityServiceTests`, volvió a verde y lo mergeé.
+Corrida en rojo: https://github.com/2319555-blason/ingsoft3-tp01/actions/runs/37834281750
+
+**PR #29 (queda abierto y en rojo hasta la defensa):** https://github.com/2319555-blason/ingsoft3-tp01/pull/29
+
+Agrega `reminders.js` en el frontend sin tests. `build-frontend` queda en rojo porque las
+líneas cubiertas bajan a **62,22%**.
+
+**Diferencia con el TP4:** el freno del TP4 paraba código que **no compilaba**. Este para
+código que compila y pasa los tests, pero **entró sin verificar**.
+
+## Problemas encontrados y cómo los resolví
+
+- **Error "no se encontró Xunit":** la app intentaba compilar los tests. Lo arreglé
+  excluyendo la carpeta de tests en el `.csproj` de la app.
+- **PowerShell no dejaba correr `npm`:** lo habilité con `Set-ExecutionPolicy RemoteSigned`.
+- **"El archivo de proyecto no existe":** estaba corriendo `dotnet` desde la carpeta `frontend`.
+- **`.dockerignore` del backend:** solo ignoraba `bin/` y `obj/` de la raíz; lo cambié a
+  `**/bin/` y `**/obj/` para que también ignore los de los tests.
+- **Conflicto en el `.csproj` al abrir el PR:** el mismo cambio había entrado a `main` por otro
+  lado. Lo resolví en GitHub dejando una sola copia.
+
+## Declaración de uso de IA
+
+Usé **Claude** como tutor en todo el TP (no usé otra IA). Me ayudó a entender los conceptos,
+escribir los tests y el código nuevo, configurar el pipeline y redactar este documento.
+
+Cómo lo verifiqué: corrí cada test en mi compu antes de subirlo; cambié reglas a propósito
+para ver que los tests se pusieran en rojo; medí la cobertura y leí el reporte; y comprobé en
+GitHub que los PRs #28 y #29 quedaran bloqueados por cobertura con todos los tests en verde.
