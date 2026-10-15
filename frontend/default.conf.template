@@ -1,0 +1,39 @@
+# TP6: este archivo es una PLANTILLA (antes era nginx.conf). La imagen oficial de nginx procesa
+# los archivos de /etc/nginx/templates/ al arrancar y reemplaza cada ${VARIABLE} por su valor.
+# Así la MISMA imagen sirve en docker compose, en QA y en PROD: lo único que cambia es el entorno.
+server {
+    listen 80;
+    server_name _;
+
+    root /usr/share/nginx/html;
+    index index.html;
+
+    # ---------- Ruteo de la SPA ----------
+    # React Router maneja las rutas del lado del navegador. Si alguien entra directo a /records,
+    # ese archivo no existe en el disco: try_files devuelve index.html y el router resuelve.
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    # ---------- Proxy hacia el backend ----------
+    # El navegador nunca habla directo con el backend: pide /api/... al mismo origen y nginx reenvía.
+    # La dirección del backend y el DNS llegan por variables de entorno:
+    #   - en docker compose: BACKEND_URL=http://backend:8080 y el DNS interno de Docker (127.0.0.11)
+    #   - en Render: la URL https de la api de ESE entorno y un DNS público (8.8.8.8)
+    # Usar una variable ($backend_api) hace que nginx resuelva el nombre en cada pedido y no al
+    # arrancar: si el backend todavía no existe o está dormido, nginx arranca igual.
+    resolver ${DNS_RESOLVER} valid=10s ipv6=off;
+    set $backend_api ${BACKEND_URL};
+
+    location /api/ {
+        proxy_pass $backend_api;
+        proxy_ssl_server_name on;   # la api de Render es https: sin esto el TLS no sabe a qué host va
+
+        # OJO: acá NO va "proxy_set_header Host $host". Render enruta por el nombre del host:
+        # si le llega el host del front, no sabe que el pedido es para la api.
+        proxy_http_version 1.1;
+        proxy_set_header X-Real-IP         $remote_addr;
+        proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}

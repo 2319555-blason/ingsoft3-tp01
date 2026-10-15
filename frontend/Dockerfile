@@ -43,7 +43,14 @@ ENTRYPOINT ["npm", "run", "test:ci"]
 FROM public.ecr.aws/docker/library/nginx:1.27-alpine AS runtime
 
 # Nuestra configuración reemplaza el sitio por defecto de nginx.
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# TP6: la configuración va como PLANTILLA en templates/ (no en conf.d/): nginx la procesa al
+# arrancar y reemplaza ${BACKEND_URL} y ${DNS_RESOLVER} por los valores del entorno.
+COPY default.conf.template /etc/nginx/templates/default.conf.template
+
+# Valores por defecto = los de docker compose (TP2), así el compose sigue andando sin tocarlo.
+# Render los pisa con las variables de cada servicio (QA y PROD).
+ENV BACKEND_URL=http://backend:8080 \
+    DNS_RESOLVER=127.0.0.11
 
 # Traemos SOLO el resultado del build de la etapa anterior.
 # El código fuente, node_modules y npm se descartan con la etapa 1.
