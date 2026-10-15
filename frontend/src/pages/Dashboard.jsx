@@ -27,7 +27,7 @@ export default function Dashboard() {
     <section>
       <div className="section-heading">
         <h2>Panel de mantenimiento</h2>
-        <p>Esto se recalcula cada vez que abrís la app, según tus registros.</p>
+       <p>Tus tareas vencidas y próximas, recalculadas con cada registro (v6).</p>
       </div>
 
       {overdue.length === 0 && upcoming.length === 0 && (
