@@ -27,7 +27,7 @@ export default function Dashboard() {
     <section>
       <div className="section-heading">
         <h2>Panel de mantenimiento</h2>
-       <p>Tus tareas vencidas y próximas, recalculadas con cada registro (v6).</p>
+       <p>Tus tareas vencidas y próximas, recalculadas con cada registro (v6.1).</p>
       </div>
 
       {overdue.length === 0 && upcoming.length === 0 && (
