@@ -1,3 +1,30 @@
+# Enlaces de este TP (TP6)
+
+**Paquetes públicos del registry** (se bajan con `docker pull` sin credenciales; cada imagen está etiquetada con el commit del merge que la produjo, `sha-<commit>`):
+
+- Backend: https://github.com/2319555-blason/ingsoft3-tp01/pkgs/container/ingsoft3-tp01-backend
+- Frontend: https://github.com/2319555-blason/ingsoft3-tp01/pkgs/container/ingsoft3-tp01-frontend
+
+**Los dos enlaces de la cadena (Tarea 1):**
+
+- Job de un PR, con «Entrar al registry» salteado: https://github.com/2319555-blason/ingsoft3-tp01/actions/runs/37993298295/job/114034687472?pr=31
+- Lista de pasos de una corrida de `main` (publicar es el último paso): https://github.com/2319555-blason/ingsoft3-tp01/actions/runs/37996089540/job/114042432232
+
+**URLs de los entornos:**
+
+| | Frontend | Backend |
+|---|---|---|
+| QA | https://hm-front-qa.onrender.com | https://hm-api-qa.onrender.com |
+| PROD | https://hm-front-prod.onrender.com | https://hm-api-prod.onrender.com |
+
+> En el plan gratis los servicios se duermen: la primera visita puede tardar hasta un minuto.
+
+**Además:**
+
+- Deploy a PROD **rechazado**, con su motivo (corrida #42): https://github.com/2319555-blason/ingsoft3-tp01/actions/runs/38679208746
+- Deploy a PROD **aprobado** (corrida #44): https://github.com/2319555-blason/ingsoft3-tp01/actions/runs/38810295935
+- Release: https://github.com/2319555-blason/ingsoft3-tp01/releases/tag/v6.0.0
+
 # Decisiones — TP1: Git colaborativo
 
 ## Por qué Git no pudo resolver el conflicto solo
@@ -431,7 +458,6 @@ código que compila y pasa los tests, pero **entró sin verificar**.
 
 - **Error "no se encontró Xunit":** la app intentaba compilar los tests. Lo arreglé
   excluyendo la carpeta de tests en el `.csproj` de la app.
-- **PowerShell no dejaba correr `npm`:** lo habilité con `Set-ExecutionPolicy RemoteSigned`.
 - **"El archivo de proyecto no existe":** estaba corriendo `dotnet` desde la carpeta `frontend`.
 - **`.dockerignore` del backend:** solo ignoraba `bin/` y `obj/` de la raíz; lo cambié a
   `**/bin/` y `**/obj/` para que también ignore los de los tests.
@@ -446,3 +472,114 @@ escribir los tests y el código nuevo, configurar el pipeline y redactar este do
 Cómo lo verifiqué: corrí cada test en mi compu antes de subirlo; cambié reglas a propósito
 para ver que los tests se pusieran en rojo; medí la cobertura y leí el reporte; y comprobé en
 GitHub que los PRs #28 y #29 quedaran bloqueados por cobertura con todos los tests en verde.
+
+# Decisiones — TP6: CD con entornos, aprobación y rollback
+
+## Qué armé y cómo cumplo el contrato
+
+`build-backend` + `build-frontend` → `deploy-qa` (automático) → `deploy-prod` (espera mi aprobación).
+
+Usé **Render** para los contenedores y **Neon** para Postgres:
+
+1. **Dos entornos con su URL:** `hm-*-qa` y `hm-*-prod`.
+2. **Una base por entorno:** `app_qa` y `app_prod`. Lo probé: el registro "SOLO EN PROD" no
+   aparece en QA, y en Neon cada base tiene una sola fila, las dos con Id 1.
+3. **Front y back corren como contenedores**, con mis Dockerfiles.
+4. **El deploy lo dispara el pipeline** con el commit verificado (`&ref=$GITHUB_SHA`). El
+   Auto-Deploy de Render está apagado.
+5. **PROD necesita aprobación** del environment `production`.
+
+## Por qué la imagen se publica sólo con todo en verde
+
+Publicar es el **último paso** del job que corre los tests, y sólo en `main`. Si los tests
+fallan, ese paso no llega a correr. Si se publicara igual, estar en el registry dejaría de
+significar "esto pasó la verificación".
+
+## Continuous Delivery, no Deployment
+
+Implementé **Continuous Delivery**: cada cambio queda listo para PROD, pero yo decido cuándo
+sale. En Continuous Deployment saldría solo. No lo elegí porque no tengo monitoreo y mi smoke
+test sólo prueba que la app contesta, no que funcione bien.
+
+## La cadena y los secrets
+
+- `needs`: PROD espera a QA, y QA espera a los dos builds.
+- `if: main` está sólo en `deploy-qa`. `deploy-prod` depende de él, así que en un PR tampoco corre.
+- `environment`: cada job usa los secrets de su entorno, y `production` además pide revisor.
+- `concurrency`: nunca corren dos deploys a PROD a la vez.
+
+Los deploy hooks de QA están en el environment `qa` y los de PROD en `production`. Los de PROD
+sólo se pueden leer **después de aprobar**. Si estuvieran en los secrets del repo, cualquier job
+podría desplegar a PROD sin aprobación.
+
+## Qué miro antes de aprobar
+
+- Que QA haya quedado en verde y que la versión nueva ya esté Live en Render.
+- Probar a mano en QA lo que cambió.
+- Que el PR sea chico y que entienda todo lo que hace.
+- Si toca la base de datos (el rollback no lo deshace).
+
+Primero **rechacé** un deploy (corrida #42): todavía no había comprobado que PROD usara su propia
+base. Después lo verifiqué y **aprobé** otro cambio visible (corrida #44).
+
+## El free tier
+
+- Los servicios **se duermen** a los 15 minutos sin uso, y despertar tarda hasta 1 minuto. Por
+  eso el smoke reintenta 30 veces cada 20 segundos.
+- **750 horas por mes y 500 minutos de build**, para todo el workspace. Al 16/10 llevo 8,85 h y
+  3 minutos de build, según Workspace → Billing.
+
+## Lo que pierdo porque Render reconstruye
+
+Render no usa la imagen que verifiqué en ghcr.io: la vuelve a construir desde el código. Lo que
+corre en QA y PROD no es exactamente lo que pasó los tests, porque la imagen base o una
+dependencia pueden cambiar entre un build y otro. Esto se arregla en el TP7.
+
+## Qué prueba el smoke test
+
+Prueba que la API, la base y el front contestan. **No prueba qué versión contesta.** En la
+corrida #44 dio verde en 39 segundos, pero el cambio apareció en PROD minutos después: el smoke
+le pegó a la versión vieja. Mejora posible: que `/health` devuelva el commit y el smoke lo compare.
+
+## Patrón para una producción real: blue-green
+
+Tendría dos copias de PROD: una atiende y la otra recibe la versión nueva. Cuando la nueva
+funciona, paso el tráfico a ella.
+
+- **Ventaja:** el rollback es instantáneo, porque vuelvo el tráfico a la copia anterior sin
+  reconstruir nada.
+- **Costo:** el doble de servidores. Para una app chica es poco.
+- **Riesgo:** las dos copias comparten la base, así que un cambio de esquema tiene que funcionar
+  con las dos versiones.
+
+No elegí canary porque necesita métricas que hoy no tengo. Tampoco rolling, porque tengo una sola
+instancia. Me falta que `/health` diga la versión, y logs, métricas y alertas.
+
+## Plan de rollback (probado)
+
+1. Busco el último commit bueno: `git rev-list -n1 v6.0.0`.
+2. Copio los deploy hooks de PROD desde Render.
+3. Disparo los dos hooks con `&ref=<commit bueno>`.
+4. Espero a que Render → Deploys muestre ese commit como Live.
+5. Arreglo `main` con un PR, para que el próximo merge no vuelva a subir el error.
+
+**Medido:** pasé PROD a "(v6.1)" y volví a `v6.0.0`. Disparé a las **16:50:20** y el último
+servicio quedó Live a las **16:51:15**: **unos 55 segundos**. Fue rápido porque Render ya tenía
+ese commit construido.
+
+**Lo que el rollback no deshace son los datos.** Si una versión mala borra datos, siguen
+borrados. Para eso hacen falta backups de la base.
+
+## Problemas encontrados
+
+- Docker Hub y después el espejo de Amazon cortaban las descargas por límite: cambié de espejo y
+  re-corrí los jobs.
+- nginx buscaba `backend`, que sólo existe en docker-compose: lo pasé a una plantilla con
+  variables.
+- Error 502 mientras la API dormía (cold start).
+
+## Uso de IA
+
+Usé **Claude** como tutor (no usé otra IA). Me explicó los conceptos, escribió los cambios del
+pipeline y me ayudó a redactar esto. Lo verifiqué en Actions, en Render y en Neon: rechacé y
+aprobé deploys, comprobé que las bases están separadas e hice el rollback midiendo los tiempos.
