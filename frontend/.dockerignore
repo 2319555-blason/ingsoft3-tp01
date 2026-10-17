@@ -9,6 +9,12 @@ dist/
 # Reporte de cobertura generado en tu máquina (TP5)
 coverage/
 
+# Pruebas de integración/e2e (TP7): corren en el pipeline contra QA, no van adentro de la imagen
+e2e/
+playwright.config.js
+playwright-report/
+test-results/
+
 # Historial de git, config del editor y del propio Docker
 .git
 .vscode/

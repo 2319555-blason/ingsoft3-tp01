@@ -19,3 +19,7 @@ Thumbs.db
 TestResults/
 coveragereport/
 coverage/
+
+# reportes de Playwright (TP7): se generan en cada corrida; en el pipeline se suben como artefacto
+playwright-report/
+test-results/

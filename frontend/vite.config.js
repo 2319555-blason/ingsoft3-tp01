@@ -1,4 +1,5 @@
 import { defineConfig } from 'vite'
+import { configDefaults } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 
 // El frontend siempre pide a rutas relativas /api/... (nunca a un host+puerto escrito a mano).
@@ -9,6 +10,8 @@ export default defineConfig({
   // Configuración de vitest (tests unitarios, sin navegador)
   test: {
     environment: 'node',
+    // TP7: los specs de Playwright (e2e/) NO son de vitest. Sin esto vitest los agarra por el *.spec.js y explota.
+    exclude: [...configDefaults.exclude, 'e2e/**'],
     coverage: {
       provider: 'v8',
       // Qué ENTRA en la cuenta: la lógica del front. Quedan afuera, a propósito:

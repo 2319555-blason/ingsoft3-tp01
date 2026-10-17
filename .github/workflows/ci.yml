@@ -214,11 +214,84 @@ jobs:
           done
           echo "❌ QA no respondió a tiempo"; exit 1
 
+  # ============ TP7: integración — pedidos a la API de QA, sin navegador ============
+  # Le habla a la API de QA YA DESPLEGADA (la imagen de esta corrida), con su Postgres de verdad.
+  integracion:
+    runs-on: ubuntu-latest
+    needs: deploy-qa              # QA ya ejecuta la imagen de ESTA corrida (y el smoke la despertó)
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Instalar dependencias (sin navegador)
+        run: npm ci                     # sin "playwright install": estas pruebas no abren browser
+        working-directory: ./frontend
+
+      - name: Integración contra la API de QA
+        env:
+          API_BASE_URL: https://hm-api-qa.onrender.com   # la API, no el front
+        run: npx playwright test e2e/api.spec.js
+        working-directory: ./frontend
+
+      - name: Publicar reporte de integración
+        uses: actions/upload-artifact@v6
+        if: ${{ !cancelled() }}         # el reporte se publica también cuando falla
+        with:
+          name: playwright-report-integracion   # distinto del de e2e: dos iguales rompen la corrida
+          path: frontend/playwright-report
+          retention-days: 7
+
+  # ============ TP7: e2e — un navegador de verdad usando el front de QA ============
+  e2e:
+    runs-on: ubuntu-latest
+    needs: integracion            # si la API está rota, no gastamos un browser en confirmarlo
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Instalar dependencias + navegador
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+        working-directory: ./frontend
+
+      - name: e2e contra el front de QA
+        env:
+          E2E_BASE_URL: https://hm-front-qa.onrender.com
+        run: npx playwright test e2e/records.spec.js
+        working-directory: ./frontend
+
+      - name: Publicar reporte e2e
+        uses: actions/upload-artifact@v6
+        if: ${{ !cancelled() }}         # importa MÁS cuando falla
+        with:
+          name: playwright-report-e2e
+          path: frontend/playwright-report
+          retention-days: 7
+
   # ======================= TP6: el gate humano hacia PROD =======================
   deploy-prod:
     runs-on: ubuntu-latest
-    needs: deploy-qa              # PROD sólo después de QA desplegado y con smoke verde.
-                                  # No repite el "if: main": lo hereda, porque deploy-qa no corre en PRs.
+    needs: e2e                    # TP7 — EL gate: sin integración y e2e en verde, ni se pide aprobación.
+                                  # No repite el "if: main": lo hereda por la cadena (deploy-qa no corre en PRs).
     environment: production       # ⏸ el workflow SE PAUSA acá hasta que un reviewer aprueba o rechaza
     concurrency:                  # nunca dos deploys a PROD pisándose
       group: deploy-prod

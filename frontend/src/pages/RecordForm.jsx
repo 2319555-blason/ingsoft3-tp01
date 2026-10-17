@@ -77,7 +77,7 @@ export default function RecordForm() {
         <p>Cargá una tarea de mantenimiento que ya realizaste.</p>
       </div>
 
-      {error && <p className="error-state">{error}</p>}
+      {error && <p className="error-state" role="alert">{error}</p>}
 
       <form onSubmit={handleSubmit} className="record-form">
         <label>
