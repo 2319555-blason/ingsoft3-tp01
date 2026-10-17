@@ -24,7 +24,7 @@ export default function RecordsList() {
     }
   }
 
-  if (error) return <p className="error-state">{error}</p>
+  if (error) return <p className="error-state" role="alert">{error}</p>
   if (records === null) return <p className="loading-state">Cargando registros...</p>
 
   return (
@@ -61,7 +61,7 @@ export default function RecordsList() {
                 <td>{r.recommendedIntervalMonths} meses</td>
                 <td className="row-actions">
                   <Link to={`/records/${r.id}/edit`}>Editar</Link>
-                  <button onClick={() => handleDelete(r.id)} className="link-danger">Borrar</button>
+                  <button onClick={() => handleDelete(r.id)} className="link-danger" aria-label={`Borrar ${r.title}`}>Borrar</button>
                 </td>
               </tr>
             ))}
