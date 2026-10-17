@@ -133,7 +133,7 @@ export default function RecordForm() {
 
         <div className="form-actions">
           <button type="submit" className="btn btn-primary" disabled={saving}>
-            {saving ? 'Guardando...' : 'Guardar'}
+            {saving ? 'Guardando...' : 'Enviar'}
           </button>
           <button type="button" className="btn" onClick={() => navigate('/records')}>
             Cancelar
