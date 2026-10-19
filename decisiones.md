@@ -4,7 +4,7 @@
 
 - Backend: https://github.com/2319555-blason/ingsoft3-tp01/pkgs/container/ingsoft3-tp01-backend
 - Frontend: https://github.com/2319555-blason/ingsoft3-tp01/pkgs/container/ingsoft3-tp01-frontend
-- Imagen que está en PROD: `sha-6d4b17b1d08ac9aebd40d1e91a7ef8e1bce6ec09` (release `v7.0.0`)
+- Imagen que está en PROD: la `sha-<commit>` del commit de la release `v7.0.0` (`git rev-list -n1 v7.0.0`)
 
 **La e2e roja frenando la promoción (integración verde + e2e roja):**
 
