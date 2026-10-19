@@ -1,3 +1,23 @@
+# Enlaces del TP7
+
+**Paquetes públicos** (se bajan con `docker pull` sin credenciales; etiqueta `sha-<commit completo>`):
+
+- Backend: https://github.com/2319555-blason/ingsoft3-tp01/pkgs/container/ingsoft3-tp01-backend
+- Frontend: https://github.com/2319555-blason/ingsoft3-tp01/pkgs/container/ingsoft3-tp01-frontend
+- Imagen que está en PROD: `sha-6d4b17b1d08ac9aebd40d1e91a7ef8e1bce6ec09` (release `v7.0.0`)
+
+**La e2e roja frenando la promoción (integración verde + e2e roja):**
+
+- Commit que rompió la app: `4c470f1` (PR #40, el botón "Guardar" pasó a decir "Enviar")
+- Corrida #55: https://github.com/2319555-blason/ingsoft3-tp01/actions/runs/39063615958
+- Artefactos de esa corrida (abajo de todo, en *Artifacts*): `playwright-report-integracion` (verde) y `playwright-report-e2e` (rojo)
+
+**La corrida completa en verde posterior, hasta PROD:**
+
+- Arreglo (PR #41, commit `6d4b17b`), corrida #57: https://github.com/2319555-blason/ingsoft3-tp01/actions/runs/39065897416/attempts/3
+
+**URLs:** QA https://hm-front-qa.onrender.com / https://hm-api-qa.onrender.com — PROD https://hm-front-prod.onrender.com / https://hm-api-prod.onrender.com
+
 # Enlaces de este TP (TP6)
 
 **Paquetes públicos del registry** (se bajan con `docker pull` sin credenciales; cada imagen está etiquetada con el commit del merge que la produjo, `sha-<commit>`):
@@ -583,3 +603,69 @@ borrados. Para eso hacen falta backups de la base.
 Usé **Claude** como tutor (no usé otra IA). Me explicó los conceptos, escribió los cambios del
 pipeline y me ayudó a redactar esto. Lo verifiqué en Actions, en Render y en Neon: rechacé y
 aprobé deploys, comprobé que las bases están separadas e hice el rollback midiendo los tiempos.
+
+# Decisiones — TP7: la imagen como release, integración y e2e
+
+## Build once, deploy many
+
+En el TP6 Render reconstruía la app desde el código, así que lo que corría no era la imagen que
+pasó los tests. Ahora la imagen se construye **una vez** y **esa misma** corre en QA y en PROD.
+Los 4 servicios de Render pasaron a *Existing Image* (les cambié la fuente, no creé nuevos).
+
+## Etiquetas
+
+- `sha-<commit>`: dice de qué commit salió la imagen. Es la que despliega el pipeline.
+- `v7.0.0`: marca el commit que está en PROD.
+- No publico `latest` porque no dice qué versión hay adentro.
+
+En Render configuré la imagen `sha-81dee67…`, pero no es la que corre: cada deploy del pipeline
+le dice a Render qué imagen usar con `imgURL=…:sha-<commit>`.
+
+**Del tag a la imagen:** `git rev-list -n1 v7.0.0` da el commit, y la imagen es `sha-<ese commit>`.
+
+## Cómo compruebo qué imagen corre
+
+En Render → Deploys, cada deploy se llama `sha-<commit>` y dice **Trigger: Deploy Hook**. El smoke
+no lo prueba: sólo dice que la app responde.
+
+## Qué pruebo
+
+**Integración** (contra la API de QA, sin navegador): crear y borrar un registro; título vacío da
+400 y no crea nada; una tarea vencida aparece en `/api/suggestions`.
+
+**E2E** (con navegador, contra el front de QA): crear y borrar desde la pantalla; un intervalo
+inválido muestra el error y no crea nada; una tarea vencida aparece en el panel.
+
+La tercera de cada suite es el **panel**, porque es lo que el usuario mira todos los días. Las
+reglas con todos sus casos quedan en los unitarios del TP5, que son más rápidos.
+
+## El par verde/rojo
+
+Cambié el botón "Guardar" por "Enviar" (corrida #55): integración ✅, e2e ❌ y PROD no se
+desplegó. Si la API está bien y el navegador falla, el problema está en el **front**. El reporte
+lo confirmó: el test buscaba "Guardar" y la captura muestra "Enviar".
+
+## Integración contra QA ya desplegado
+
+Pruebo la API real con la base real y casi sin configuración. La contra: necesita el deploy
+antes, y QA es compartido, por eso hago un merge por vez.
+
+## Cold start y flaky
+
+El smoke despierta QA antes de las pruebas, y Playwright espera hasta 90 s por test. Un test
+**flaky** a veces pasa y a veces falla sin cambios en el código; Playwright lo marca y lo reviso.
+
+## La misma imagen del front en QA y PROD
+
+La dirección de la API va por variable de Render (`BACKEND_URL`), no adentro de la imagen.
+
+## Problemas encontrados
+
+- Las e2e fallaban contra QA porque QA todavía no tenía los cambios de la app.
+- Un selector encontraba dos celdas: lo hice exacto.
+
+## Uso de IA
+
+Usé **Claude** como tutor. Me explicó los conceptos y escribió las pruebas y los cambios del
+pipeline. Lo verifiqué corriendo las pruebas, mirando en Render qué imagen corre y rompiendo la
+app a propósito.
