@@ -1,13 +1,13 @@
-# TP6: las imágenes base se bajan del espejo público de Amazon (ECR Public), que replica las
-# imágenes oficiales de Docker Hub sin su límite de descargas anónimas. Desde los runners de
-# GitHub, Docker Hub respondía "429 Too Many Requests" al bajar nginx.
+# Las imágenes base son las oficiales de Docker Hub. El pipeline inicia sesión en Docker Hub antes
+# de construir (TP8), así que no choca con el límite de descargas anónimas. (En el TP6 se bajaban
+# de un espejo de Amazon, ECR Public, que también terminó cortando por límite de datos.)
 # ============================================================
 # ETAPA 1 — "build": compila la SPA.
 # La imagen de node trae npm y todo lo necesario para construir.
 # Nada de esto hace falta después: el resultado de compilar un
 # frontend son archivos estáticos, no un proceso de Node corriendo.
 # ============================================================
-FROM public.ecr.aws/docker/library/node:22-alpine AS build
+FROM node:22-alpine AS build
 WORKDIR /app
 
 # Mismo truco de caché que en el backend: primero los manifiestos
@@ -40,7 +40,7 @@ ENTRYPOINT ["npm", "run", "test:ci"]
 # ETAPA 3 — "runtime": un servidor web sirviendo archivos estáticos.
 # Acá NO hay Node ni node_modules. Solo nginx y la carpeta dist.
 # ============================================================
-FROM public.ecr.aws/docker/library/nginx:1.27-alpine AS runtime
+FROM nginx:1.27-alpine AS runtime
 
 # Nuestra configuración reemplaza el sitio por defecto de nginx.
 # TP6: la configuración va como PLANTILLA en templates/ (no en conf.d/): nginx la procesa al
