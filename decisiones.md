@@ -669,3 +669,25 @@ La dirección de la API va por variable de Render (`BACKEND_URL`), no adentro de
 Usé **Claude** como tutor. Me explicó los conceptos y escribió las pruebas y los cambios del
 pipeline. Lo verifiqué corriendo las pruebas, mirando en Render qué imagen corre y rompiendo la
 app a propósito.
+
+# Decisiones — TP8: preprod como código (Terraform)
+
+## Herramienta y versiones
+
+Usé **Terraform** (v1.16.6) con **Neon** para la base y **Render** para los servicios, el mismo
+riel que QA y PROD. Fijé los providers en `infra/main.tf`: `kislerdm/neon` **0.18.0** y
+`render-oss/render` **1.9.1**. El `.terraform.lock.hcl` está en el repo; el estado no.
+
+## Problemas encontrados
+
+- El primer `apply` falló con `org_id is required`: mi cuenta de Neon tiene una organización.
+  Lo resolví agregando `org_id` al proyecto.
+- Terraform no se reconocía después de instalarlo: la terminal no había recargado el PATH.
+- Los builds del pipeline fallaban con `toomanyrequests` al bajar BuildKit (descargas anónimas
+  desde runners compartidos). Lo resolví iniciando sesión en Docker Hub con un token de sólo
+  lectura guardado como secret.
+
+## Uso de IA
+
+Usé **Claude** como tutor. Me explicó los conceptos y escribió el HCL. Lo verifiqué leyendo cada
+`plan`, creando y destruyendo preprod y comprobando que QA y PROD no cambiaron.
