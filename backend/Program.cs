@@ -40,7 +40,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
+// TP9: acepta GET y HEAD. El monitor gratuito de UptimeRobot pregunta con HEAD; con sólo GET daría 405 y marcaría "caída".
+app.MapMethods("/health", new[] { "GET", "HEAD" }, () => Results.Ok(new { status = "ok" }));
 
 // ---- CRUD de registros ----
 

@@ -1,0 +1,22 @@
+# TP9: Dependabot vigila las dependencias de los 3 ecosistemas y propone PRs de actualización.
+version: 2
+updates:
+  - package-ecosystem: "nuget"            # backend (la API)
+    directory: "/backend"
+    schedule:
+      interval: "weekly"
+
+  - package-ecosystem: "nuget"            # los tests del backend (el escaneo no es recursivo)
+    directory: "/backend/HomeMaintenanceApi.Tests"
+    schedule:
+      interval: "weekly"
+
+  - package-ecosystem: "npm"              # frontend
+    directory: "/frontend"
+    schedule:
+      interval: "weekly"
+
+  - package-ecosystem: "github-actions"   # las actions del pipeline también son dependencias
+    directory: "/"
+    schedule:
+      interval: "weekly"
