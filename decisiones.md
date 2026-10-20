@@ -683,9 +683,9 @@ riel que QA y PROD. Fijé los providers en `infra/main.tf`: `kislerdm/neon` **0.
 - El primer `apply` falló con `org_id is required`: mi cuenta de Neon tiene una organización.
   Lo resolví agregando `org_id` al proyecto.
 - Terraform no se reconocía después de instalarlo: la terminal no había recargado el PATH.
-- Los builds del pipeline fallaban con `toomanyrequests` al bajar BuildKit (descargas anónimas
-  desde runners compartidos). Lo resolví iniciando sesión en Docker Hub con un token de sólo
-  lectura guardado como secret.
+- Los builds del pipeline fallaban con `toomanyrequests` al bajar BuildKit y las imágenes base del
+  front (descargas anónimas desde runners compartidos). Lo resolví iniciando sesión en Docker Hub
+  con un token de sólo lectura guardado como secret, y bajando `node` y `nginx` de Docker Hub.
 
 ## Uso de IA
 
