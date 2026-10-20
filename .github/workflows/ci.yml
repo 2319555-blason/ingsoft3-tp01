@@ -22,12 +22,17 @@ jobs:
       - name: Bajar el código al runner
         uses: actions/checkout@v6
 
+      # Iniciar sesión en Docker Hub ANTES de bajar BuildKit: las descargas anónimas desde los
+      # runners compartidos de GitHub chocaban contra límites ("toomanyrequests"). Con sesión,
+      # el límite es el de MI cuenta. El token es de sólo lectura y vive en los secrets del repo.
+      - name: Entrar a Docker Hub (para no chocar con límites de descarga)
+        uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
       - name: Preparar el constructor que sabe cachear
         uses: docker/setup-buildx-action@v4
-        with:
-          # La imagen de BuildKit se baja de un espejo en ECR Public y no de Docker Hub:
-          # desde los runners de GitHub, Docker Hub daba timeout y el job moría acá.
-          driver-opts: image=public.ecr.aws/vend/moby/buildkit:buildx-stable-1
 
       # ---------------- TP5: tests + cobertura + umbral del backend ----------------
       - name: Construir la etapa de tests del backend
@@ -101,12 +106,17 @@ jobs:
       - name: Bajar el código al runner
         uses: actions/checkout@v6
 
+      # Iniciar sesión en Docker Hub ANTES de bajar BuildKit: las descargas anónimas desde los
+      # runners compartidos de GitHub chocaban contra límites ("toomanyrequests"). Con sesión,
+      # el límite es el de MI cuenta. El token es de sólo lectura y vive en los secrets del repo.
+      - name: Entrar a Docker Hub (para no chocar con límites de descarga)
+        uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
       - name: Preparar el constructor que sabe cachear
         uses: docker/setup-buildx-action@v4
-        with:
-          # La imagen de BuildKit se baja de un espejo en ECR Public y no de Docker Hub:
-          # desde los runners de GitHub, Docker Hub daba timeout y el job moría acá.
-          driver-opts: image=public.ecr.aws/vend/moby/buildkit:buildx-stable-1
 
       # ---------------- TP5: tests + cobertura + umbral del frontend ----------------
       - name: Construir la etapa de tests del frontend

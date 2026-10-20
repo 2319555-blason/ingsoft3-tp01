@@ -23,3 +23,9 @@ coverage/
 # reportes de Playwright (TP7): se generan en cada corrida; en el pipeline se suben como artefacto
 playwright-report/
 test-results/
+
+# Terraform (TP8): el estado tiene contraseñas y NO se versiona. El .terraform.lock.hcl SÍ se commitea.
+*.tfstate
+*.tfstate.*
+.terraform/
+*.tfvars
