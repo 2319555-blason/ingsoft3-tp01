@@ -691,3 +691,31 @@ riel que QA y PROD. Fijé los providers en `infra/main.tf`: `kislerdm/neon` **0.
 
 Usé **Claude** como tutor. Me explicó los conceptos y escribió el HCL. Lo verifiqué leyendo cada
 `plan`, creando y destruyendo preprod y comprobando que QA y PROD no cambiaron.
+
+# Decisiones — TP9: DevSecOps + observabilidad
+
+## El PR de Dependabot
+
+Mergeé el que subía **xunit de 2.5.3 a 2.9.3**. Me animé porque es un cambio **minor** (no rompe
+según SemVer), sólo toca los **tests** (no lo que corre en producción) y el pipeline quedó en verde.
+
+## Lo que medí en producción
+
+- **Monitor (UptimeRobot):** suspendí PROD a las 17:48 y el aviso de DOWN llegó a las 17:51, o sea
+  **unos 3 minutos**. El UP llegó al volver a prenderla.
+- **Sentry:** la operación **más usada** y también la **más lenta** es `GET /api/records`
+  (P50 116 ms, **P95 2,22 s**). El P95 alto es el primer pedido cuando la base de Neon estaba
+  dormida. Con ese dato abrí una tarjeta en el tablero del TP3.
+
+## Problemas encontrados
+
+- Los PRs de Dependabot fallaban: sus corridas no ven los secrets de Actions. Cargué los de Docker
+  Hub también en los secrets de **Dependabot**.
+- UptimeRobot gratis chequea con `HEAD` y `/health` sólo aceptaba `GET`: agregué `HEAD`.
+- CodeQL marcó dos jobs sin `permissions`: les puse `contents: read` (mínimo privilegio).
+- Se me llenó el disco y no se instalaba Sentry: liberé espacio (temporales, papelera, Docker).
+
+## Uso de IA
+
+Usé **Claude** como tutor: me explicó cada paso y escribió la configuración y el código. Lo verifiqué
+con el pipeline en verde, viendo la caída en el monitor y el error y la tabla en Sentry.

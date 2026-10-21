@@ -116,9 +116,6 @@ app.MapDelete("/api/records/{id:int}", async (int id, AppDbContext db) =>
 app.MapGet("/api/suggestions", async (SuggestionsProvider provider) =>
     Results.Ok(await provider.GetCurrentAsync()));
 
-// TP9 — TEMPORAL: un error a propósito para verlo llegar a Sentry. Se saca al terminar el práctico.
-app.MapGet("/api/falla", string () => throw new InvalidOperationException("Falla de prueba del TP9"));
-
 app.Run();
 
 // Excluido de la cobertura: es el arranque (cablea servicios y rutas), no tiene reglas propias.
