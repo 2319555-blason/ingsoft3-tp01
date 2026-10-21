@@ -184,6 +184,8 @@ jobs:
     needs: [build-backend, build-frontend]   # sin CI verde (tests + umbral + imágenes) no hay deploy
     if: github.ref == 'refs/heads/main'      # los PRs verifican; sólo main despliega
     environment: qa                          # hereda los secrets del environment qa (los hooks)
+    permissions:                             # TP9 (CodeQL): este job sólo hace curl a Render: mínimo permiso
+      contents: read
     steps:
       # TP7: Render ya no construye. El hook le dice QUÉ IMAGEN ejecutar (imgURL), la misma
       # sha-<commit> que publicaron los jobs de build de esta corrida. Sin &ref=: no hay nada que compilar.
@@ -303,6 +305,8 @@ jobs:
     needs: e2e                    # TP7 — EL gate: sin integración y e2e en verde, ni se pide aprobación.
                                   # No repite el "if: main": lo hereda por la cadena (deploy-qa no corre en PRs).
     environment: production       # ⏸ el workflow SE PAUSA acá hasta que un reviewer aprueba o rechaza
+    permissions:                  # TP9 (CodeQL): sólo hace curl a Render: mínimo permiso
+      contents: read
     concurrency:                  # nunca dos deploys a PROD pisándose
       group: deploy-prod
       cancel-in-progress: false

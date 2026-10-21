@@ -25,6 +25,14 @@ builder.Services.AddScoped<SuggestionsProvider>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// TP9: Sentry cuenta qué falla, qué tarda y qué se usa. El DSN llega por la variable de entorno
+// SENTRY_DSN (sólo está cargada en PROD, en Render). Si no está —local, tests, QA— queda apagado.
+builder.WebHost.UseSentry(o =>
+{
+    o.Dsn = builder.Configuration["SENTRY_DSN"] ?? "";
+    o.TracesSampleRate = 1.0; // medir todos los pedidos
+});
+
 var app = builder.Build();
 
 // Crea las tablas si no existen. Simple y suficiente para este TP (sin migraciones).
@@ -107,6 +115,9 @@ app.MapDelete("/api/records/{id:int}", async (int id, AppDbContext db) =>
 
 app.MapGet("/api/suggestions", async (SuggestionsProvider provider) =>
     Results.Ok(await provider.GetCurrentAsync()));
+
+// TP9 — TEMPORAL: un error a propósito para verlo llegar a Sentry. Se saca al terminar el práctico.
+app.MapGet("/api/falla", string () => throw new InvalidOperationException("Falla de prueba del TP9"));
 
 app.Run();
 
